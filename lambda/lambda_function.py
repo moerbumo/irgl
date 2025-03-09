@@ -59,13 +59,22 @@ def lambda_handler(event, context):
     }
 
 def upload_result_to_s3(s3, bucket_name, object_key, analysis_result):
-    logger.info("上传解析结果到S3 开始")
+    logger.info("上传解析结果到S3 开始" + analysis_result)
 
     # 构建 JSON 文件名
     result_key = f"{object_key}.json"
 
-    # 将结果转换为 JSON 格式
-    result_json = json.dumps(analysis_result, ensure_ascii=False)
+    # 检查analysis_result是否已经是字典类型
+    if isinstance(analysis_result, dict):
+        result_json = json.dumps(analysis_result, ensure_ascii=False)
+    else:
+        # 如果是字符串，尝试解析为JSON，如果失败则直接使用
+        try:
+            json.loads(analysis_result)  # 测试是否为有效的JSON字符串
+            result_json = analysis_result  # 如果是有效的JSON字符串，直接使用
+        except (json.JSONDecodeError, TypeError):
+            # 如果不是有效的JSON字符串，则转换为JSON
+            result_json = json.dumps(analysis_result, ensure_ascii=False)
 
     # 上传到 S3
     s3.put_object(
