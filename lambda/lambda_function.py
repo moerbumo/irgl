@@ -8,6 +8,7 @@ from PIL import Image
 import textwrap
 import pyheif
 import fitz
+import numpy as np
 
 
 
@@ -189,4 +190,30 @@ def convert_pdf_to_jpg(image_content):
     buffer = io.BytesIO()
     image.save(buffer, format='JPEG')
     buffer.seek(0)
+    return buffer.getvalue()
+
+def convert_pdf_to_jpg(image_content):
+    pdf_document = fitz.open(stream=image_content, filetype='pdf')
+
+    images = []
+    for page_num in range(len(pdf_document)):  
+        page = pdf_document.load_page(page_num) 
+        pix = page.get_pixmap(alpha=False)                 
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples) 
+        images.append(img)                     
+
+    if not images:
+        logger.error("有効なページが見つからなかった")
+
+    total_height = sum(img.height for img in images)
+    max_width = max(img.width for img in images)
+
+    merged_img = Image.new("RGB", (max_width, total_height), (255,255,255))
+    y_offset = 0
+    for img in images:
+        merged_img.paste(img, (0, y_offset))
+        y_offset += img.height
+
+    buffer = io.BytesIO()
+    merged_img.save(buffer,format='JPEG')
     return buffer.getvalue()
