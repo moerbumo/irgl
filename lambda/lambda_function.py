@@ -184,16 +184,6 @@ def convert_heic_to_jpg(image_content):
 
 def convert_pdf_to_jpg(image_content):
     pdf_document = fitz.open(stream=image_content, filetype='pdf')
-    page = pdf_document.load_page(0)
-    pix = page.get_pixmap(alpha=False)
-    image = Image.open(io.BytesIO(pix.tobytes('png')))
-    buffer = io.BytesIO()
-    image.save(buffer, format='JPEG')
-    buffer.seek(0)
-    return buffer.getvalue()
-
-def convert_pdf_to_jpg(image_content):
-    pdf_document = fitz.open(stream=image_content, filetype='pdf')
 
     images = []
     for page_num in range(len(pdf_document)):  
